@@ -19,19 +19,14 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.methods.comparePassword = function (plainPassword, cb)
+userSchema.statics.ComparePass = async function (email, plainPassword, cb)
 {
-    // bcrypt compare 비교
-    if (plainPassword === this.password)
-    {
-        cb(null, true);
-    }
-    else
-    {
-        cb(null, {email:this.email, password: this.password});
-    }
-
-    return cb({error: 'error'});
+    let user = await User.findOne({ email: email.toLocaleLowerCase() });
+    
+    if (!user) return cb(null, false, {message: `비번 틀림!`});
+    if (plainPassword === user.password) return cb(null, user);
+    else return cb(null, false, {message: `비번 틀림!2`});
 }
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;

@@ -16,19 +16,10 @@ passport.deserializeUser((id, done) => {
 });
 
 passport.use('local', new LocalStrategy({ usernameField: 'email', passwordField: 'password'}, async (email, password, done) => 
-    {   
-        await User.findOne({ email: email.toLocaleLowerCase() })
-        .then(user => 
+    {
+        await User.ComparePass(email, password, (err, user, info) => 
         {
-            if (!user) return done(null, false, { message: `비번 틀림!` });
-            User.comparePassword(password, (err, isMatch) => 
-            {
-                if (err) return done(err);
-                if (isMatch === true) return done(null, user);
-        
-                return done(null, false, isMatch);
-            });
+            return done(err, user, info);
         })
-        .catch(err => done(err));
     }
 ))

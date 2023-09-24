@@ -60,7 +60,6 @@ app.post('/login', (req, res, next) =>
         if (err) return next(err);
         if (user === false) 
         {
-            console.log("Awef");
             return res.json(info);
         }
 
@@ -72,6 +71,10 @@ app.post('/login', (req, res, next) =>
     })(req, res, next);
 });
 
+app.get('/', (req, res) =>
+{
+    res.render('index');
+})
 
 app.get('/signup', (req,res) => 
 {
