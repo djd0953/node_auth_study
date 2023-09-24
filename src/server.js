@@ -1,12 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const { default: mongoose } = require('mongoose');
 const passport = require('passport');
 const cookieSession = require('cookie-session');
+const {checkAuthenticated, checkNotAuthenticated} = require('./middlewares/auth.js');
 const path = require('path');
 const app = express();
-const port = 4000;
+const port = process.env.PORT;
 
-const cookieEncryptionKey = 'super-secret-key';
+const cookieEncryptionKey = process.env.COOKIE_ENCRYPTION_KEY;
 
 app.use(cookieSession({
     keys: [cookieEncryptionKey]
@@ -44,11 +46,16 @@ app.use(passport.session());
 require('./config/passport.js');
 
 mongoose.set('strictQuery', false);
-mongoose.connect('mongodb+srv://userHJJ:HJJ@cluster0.nu6j2ch.mongodb.net/?retryWrites=true&w=majority')
+mongoose.connect(`${process.env.MONGO_URI}`)
 .then(() => console.log('mongodb connected'))
 .catch(err => console.error(err));
 
-app.get("/login", (req, res) => 
+app.get('/', checkAuthenticated, (req, res) =>
+{
+    res.render('index');
+})
+
+app.get("/login", checkNotAuthenticated, (req, res) => 
 {
     res.render("login");
 });
@@ -57,10 +64,18 @@ app.post('/login', (req, res, next) =>
 {
     passport.authenticate('local', (err, user, info) => 
     {
-        if (err) return next(err);
+        if (err)
+        {
+            console.log(err);
+            res.redirect('/login');
+        }
+
         if (user === false) 
         {
-            return res.json(info);
+            console.log(err, user, info);
+            res.redirect('/login');
+            // console.log(info);
+            // res.redirect('/');
         }
 
         req.logIn(user, (err) => 
@@ -71,12 +86,7 @@ app.post('/login', (req, res, next) =>
     })(req, res, next);
 });
 
-app.get('/', (req, res) =>
-{
-    res.render('index');
-})
-
-app.get('/signup', (req,res) => 
+app.get('/signup', checkNotAuthenticated, (req,res) => 
 {
     res.render('signup');
 });
@@ -96,8 +106,22 @@ app.post('/signup', async (req, res) =>
     {
 
     }
-
 })
+
+app.post('/logout', async (req, res, next) => 
+{
+    req.logout(function (err)
+    {
+        if (err) return next(err);
+        res.redirect('/login');
+    })
+})
+
+app.get('/auth/google', passport.authenticate('google'));
+app.get('/auth/google/callback', passport.authenticate('google', {
+    successReturnToOrRedirect: '/',
+    failureRedirect: '/login'
+}));
 
 app.listen(port, () => 
 {
