@@ -28,8 +28,8 @@ const localStrategyConfig = new LocalStrategy({ usernameField: 'email', password
 );
 passport.use('local', localStrategyConfig);
 
-const googleClientID = '471874320260-skn2r838p92l2ot78lmn6flcmcuuqbk6.apps.googleusercontent.com';
-const googleClientSecret = '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';
+const googleClientID = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const GoogleStrategyConfig = new GoogleStrategy({
